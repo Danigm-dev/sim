@@ -3,11 +3,21 @@
 # ========================================
 FROM oven/bun:1.3.10-slim AS base
 
+# Trust the host's corporate CA before any HTTPS package fetches.
+COPY docker/certs/company-ca.crt /usr/local/share/ca-certificates/company-ca.crt
+RUN mkdir -p /usr/local/share/ca-certificates /etc/ssl/certs && \
+    cat /usr/local/share/ca-certificates/company-ca.crt >> /etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/company-ca.crt
+ENV npm_config_cafile=/etc/ssl/certs/ca-certificates.crt
+ENV NPM_CONFIG_CAFILE=/etc/ssl/certs/ca-certificates.crt
+
 # Install Node.js 22 and common dependencies once in base stage
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv make g++ curl ca-certificates bash ffmpeg \
+    && update-ca-certificates \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs
 
@@ -25,13 +35,13 @@ COPY packages/testing/package.json ./packages/testing/package.json
 COPY packages/logger/package.json ./packages/logger/package.json
 COPY packages/tsconfig/package.json ./packages/tsconfig/package.json
 
-# Install turbo globally, then dependencies, then rebuild isolated-vm for Node.js
+# Install global build tools, then dependencies, then rebuild isolated-vm for Node.js
 # Use --linker=hoisted for flat node_modules layout (required for Docker multi-stage builds)
 RUN --mount=type=cache,id=bun-cache,target=/root/.bun/install/cache \
     --mount=type=cache,id=npm-cache,target=/root/.npm \
-    bun install -g turbo && \
+    bun install -g turbo node-gyp && \
     HUSKY=0 bun install --omit=dev --ignore-scripts --linker=hoisted && \
-    cd node_modules/isolated-vm && npx node-gyp rebuild --release
+    cd node_modules/isolated-vm && node-gyp rebuild --release --nodedir=/usr
 
 # ========================================
 # Builder Stage: Build the Application

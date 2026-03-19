@@ -23,6 +23,9 @@ jobs:
           - dockerfile: ./docker/db.Dockerfile
             ghcr_image: ghcr.io/simstudioai/migrations
             ecr_repo_secret: ECR_MIGRATIONS
+          - dockerfile: ./docker/opencode.Dockerfile
+            ghcr_image: ghcr.io/simstudioai/opencode
+            ecr_repo_secret: ECR_OPENCODE
           - dockerfile: ./docker/realtime.Dockerfile
             ghcr_image: ghcr.io/simstudioai/realtime
             ecr_repo_secret: ECR_REALTIME
@@ -110,6 +113,8 @@ jobs:
             image: ghcr.io/simstudioai/simstudio
           - dockerfile: ./docker/db.Dockerfile
             image: ghcr.io/simstudioai/migrations
+          - dockerfile: ./docker/opencode.Dockerfile
+            image: ghcr.io/simstudioai/opencode
           - dockerfile: ./docker/realtime.Dockerfile
             image: ghcr.io/simstudioai/realtime
 
@@ -154,6 +159,7 @@ jobs:
         include:
           - image: ghcr.io/simstudioai/simstudio
           - image: ghcr.io/simstudioai/migrations
+          - image: ghcr.io/simstudioai/opencode
           - image: ghcr.io/simstudioai/realtime
 
     steps:

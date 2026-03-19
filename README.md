@@ -63,12 +63,57 @@ Docker must be installed and running on your machine.
 
 ### Self-hosted: Docker Compose
 
+For local Docker builds, use the local compose file:
+
+```bash
+git clone https://github.com/simstudioai/sim.git && cd sim
+docker compose -f docker-compose.local.yml up -d --build
+```
+
+For a cloud or production-style deployment, use the published images:
+
 ```bash
 git clone https://github.com/simstudioai/sim.git && cd sim
 docker compose -f docker-compose.prod.yml up -d
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+If you want the internal OpenCode service to start with cloned repositories, configure these variables before running either compose command:
+
+```bash
+# Required to start the OpenCode container
+export OPENCODE_SERVER_PASSWORD=change-me
+
+# Optional but required if you want repositories cloned into /app/repos
+export OPENCODE_REPOS=https://github.com/octocat/Hello-World.git,https://github.com/your-org/your-private-repo.git
+
+# Optional Git credentials for private repositories
+export GIT_USERNAME=git
+export GIT_TOKEN=your-token
+# Azure Repos also works over HTTPS, for example:
+# export OPENCODE_REPOS=https://dev.azure.com/your-org/your-project/_git/your-repo
+# export GIT_USERNAME=your-user-or-email
+# export GIT_TOKEN=your-azure-devops-pat
+# or, for GitHub-only access:
+export GITHUB_TOKEN=your-github-token
+
+# Optional provider key so future OpenCode prompts can run successfully
+export OPENAI_API_KEY=your-openai-key
+# or:
+# export ANTHROPIC_API_KEY=your-anthropic-key
+# export GEMINI_API_KEY=your-gemini-key
+```
+
+Notes for deployment:
+
+- `docker-compose.local.yml` builds the `opencode` image locally.
+- `docker-compose.prod.yml` expects `OPENCODE_IMAGE` to exist in your registry if you override the default image.
+- If `OPENCODE_REPOS` is empty, `opencode` still starts but no repositories are cloned.
+- `opencode` is internal-only on the Docker network; it is not exposed on a host port.
+- Private Azure Repos clones must use `https` plus `GIT_USERNAME` and `GIT_TOKEN`; the container does not prompt interactively for passwords.
+
+See [`docker/opencode/README.md`](docker/opencode/README.md) for verification steps and service behavior.
 
 #### Using Local Models with Ollama
 

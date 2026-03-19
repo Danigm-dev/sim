@@ -3,6 +3,10 @@
 # ========================================
 FROM oven/bun:1.3.10-alpine AS base
 
+# Trust the host's corporate CA before any HTTPS package fetches.
+COPY docker/certs/company-ca.crt /usr/local/share/ca-certificates/company-ca.crt
+RUN cat /usr/local/share/ca-certificates/company-ca.crt >> /etc/ssl/certs/ca-certificates.crt
+
 # ========================================
 # Dependencies Stage: Install Dependencies
 # ========================================
