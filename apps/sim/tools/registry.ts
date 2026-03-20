@@ -1572,6 +1572,11 @@ import {
 } from '@/tools/onepassword'
 import { openAIEmbeddingsTool, openAIImageTool } from '@/tools/openai'
 import {
+  openCodeGetMessagesTool,
+  openCodeListReposTool,
+  openCodePromptTool,
+} from '@/tools/opencode'
+import {
   outlookCopyTool,
   outlookDeleteTool,
   outlookDraftTool,
@@ -3913,6 +3918,9 @@ export const tools: Record<string, ToolConfig> = {
   datadog_list_downtimes: datadogListDowntimesTool,
   datadog_cancel_downtime: datadogCancelDowntimeTool,
   openai_image: openAIImageTool,
+  opencode_get_messages: openCodeGetMessagesTool,
+  opencode_list_repos: openCodeListReposTool,
+  opencode_prompt: openCodePromptTool,
   microsoft_teams_read_chat: microsoftTeamsReadChatTool,
   microsoft_teams_write_chat: microsoftTeamsWriteChatTool,
   microsoft_teams_read_channel: microsoftTeamsReadChannelTool,
