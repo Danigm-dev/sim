@@ -14,6 +14,10 @@ write_runtime_env() {
     GIT_USERNAME
     GIT_TOKEN
     GITHUB_TOKEN
+    OPENAI_API_KEY
+    ANTHROPIC_API_KEY
+    GEMINI_API_KEY
+    GOOGLE_GENERATIVE_AI_API_KEY
   )
 
   umask 077
@@ -78,6 +82,10 @@ main() {
     exit 1
   fi
 
+  if [[ -z "${GOOGLE_GENERATIVE_AI_API_KEY:-}" && -n "${GEMINI_API_KEY:-}" ]]; then
+    export GOOGLE_GENERATIVE_AI_API_KEY="${GEMINI_API_KEY}"
+  fi
+
   mkdir -p /app/repos /home/opencode/.config/opencode /home/opencode/.local/share/opencode /home/opencode/.local/state
   chown -R opencode:opencode /app/repos /home/opencode/.config /home/opencode/.local/share /home/opencode/.local/state
 
@@ -85,7 +93,7 @@ main() {
   write_global_config
   install_cron
 
-  if [[ -z "${OPENAI_API_KEY:-}" && -z "${ANTHROPIC_API_KEY:-}" && -z "${GEMINI_API_KEY:-}" ]]; then
+  if [[ -z "${OPENAI_API_KEY:-}" && -z "${ANTHROPIC_API_KEY:-}" && -z "${GEMINI_API_KEY:-}" && -z "${GOOGLE_GENERATIVE_AI_API_KEY:-}" ]]; then
     log "No provider API key detected in environment; server will start but prompts may fail"
   fi
 

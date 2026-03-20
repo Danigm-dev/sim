@@ -123,6 +123,7 @@ import { ObsidianBlock } from '@/blocks/blocks/obsidian'
 import { OneDriveBlock } from '@/blocks/blocks/onedrive'
 import { OnePasswordBlock } from '@/blocks/blocks/onepassword'
 import { OpenAIBlock } from '@/blocks/blocks/openai'
+import { OpenCodeBlock } from '@/blocks/blocks/opencode'
 import { OutlookBlock } from '@/blocks/blocks/outlook'
 import { PagerDutyBlock } from '@/blocks/blocks/pagerduty'
 import { ParallelBlock } from '@/blocks/blocks/parallel'
@@ -339,6 +340,7 @@ export const registry: Record<string, BlockConfig> = {
   onepassword: OnePasswordBlock,
   onedrive: OneDriveBlock,
   openai: OpenAIBlock,
+  opencode: OpenCodeBlock,
   outlook: OutlookBlock,
   pagerduty: PagerDutyBlock,
   parallel_ai: ParallelBlock,

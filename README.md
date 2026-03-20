@@ -79,41 +79,88 @@ docker compose -f docker-compose.prod.yml up -d
 
 Open [http://localhost:3000](http://localhost:3000)
 
-If you want the internal OpenCode service to start with cloned repositories, configure these variables before running either compose command:
+#### OpenCode Setup
+
+Sim can start an internal OpenCode service that powers the `OpenCode` workflow block.
+
+Minimum setup:
 
 ```bash
-# Required to start the OpenCode container
-export OPENCODE_SERVER_PASSWORD=change-me
-
-# Optional but required if you want repositories cloned into /app/repos
-export OPENCODE_REPOS=https://github.com/octocat/Hello-World.git,https://github.com/your-org/your-private-repo.git
-
-# Optional Git credentials for private repositories
-export GIT_USERNAME=git
-export GIT_TOKEN=your-token
-# Azure Repos also works over HTTPS, for example:
-# export OPENCODE_REPOS=https://dev.azure.com/your-org/your-project/_git/your-repo
-# export GIT_USERNAME=your-user-or-email
-# export GIT_TOKEN=your-azure-devops-pat
-# or, for GitHub-only access:
-export GITHUB_TOKEN=your-github-token
-
-# Optional provider key so future OpenCode prompts can run successfully
-export OPENAI_API_KEY=your-openai-key
-# or:
-# export ANTHROPIC_API_KEY=your-anthropic-key
-# export GEMINI_API_KEY=your-gemini-key
+cp apps/sim/.env.example apps/sim/.env
 ```
 
-Notes for deployment:
+Then add these values to `apps/sim/.env`:
 
-- `docker-compose.local.yml` builds the `opencode` image locally.
-- `docker-compose.prod.yml` expects `OPENCODE_IMAGE` to exist in your registry if you override the default image.
+```env
+OPENCODE_SERVER_USERNAME=opencode
+OPENCODE_SERVER_PASSWORD=change-me
+OPENCODE_REPOS=https://github.com/octocat/Hello-World.git
+
+# Pick at least one provider key that OpenCode can use
+GEMINI_API_KEY=your-gemini-key
+# or OPENAI_API_KEY=...
+# or ANTHROPIC_API_KEY=...
+```
+
+If you want private repositories:
+
+```env
+# Generic HTTPS or Azure Repos
+GIT_USERNAME=your-user-or-email
+GIT_TOKEN=your-token-or-pat
+
+# Optional GitHub-only fallback
+GITHUB_TOKEN=your-github-token
+```
+
+Important:
+
+- `docker compose` reads environment from the shell, not from `apps/sim/.env` automatically.
+- If you want the app and the OpenCode container to use the same credentials, load that file before starting compose:
+
+```bash
+set -a
+source apps/sim/.env
+set +a
+docker compose -f docker-compose.local.yml up -d --build
+```
+
+Local vs production behavior:
+
+- `docker-compose.local.yml`
+  - builds the `opencode` image locally
+  - publishes `OPENCODE_PORT` to the host so `next dev` on the host can talk to OpenCode
+  - defaults `OPENCODE_SERVER_USERNAME=opencode`
+  - defaults `OPENCODE_SERVER_PASSWORD=dev-opencode-password` if you do not set one explicitly
+- `docker-compose.prod.yml`
+  - expects `OPENCODE_SERVER_PASSWORD` to be set explicitly
+  - keeps OpenCode internal to the Docker network with `expose`, not a published host port
+  - expects `OPENCODE_IMAGE` to exist in your registry if you override the default image
+
+For local hot reload with `next dev` on the host, also set this in `apps/sim/.env`:
+
+```env
+OPENCODE_BASE_URL=http://127.0.0.1:4096
+```
+
+Without that override, host-side Next.js cannot reliably reach the Docker service alias.
+
+Notes:
+
 - If `OPENCODE_REPOS` is empty, `opencode` still starts but no repositories are cloned.
-- `opencode` is internal-only on the Docker network; it is not exposed on a host port.
-- Private Azure Repos clones must use `https` plus `GIT_USERNAME` and `GIT_TOKEN`; the container does not prompt interactively for passwords.
+- Repositories are cloned into `/app/repos/<repo-name>`.
+- Private Azure Repos must use `https` plus `GIT_USERNAME` and `GIT_TOKEN`; the container will not prompt interactively for passwords.
+- `GOOGLE_GENERATIVE_AI_API_KEY` is optional; local and prod compose map it automatically from `GEMINI_API_KEY` if not set.
 
-See [`docker/opencode/README.md`](docker/opencode/README.md) for verification steps and service behavior.
+Basic verification after startup:
+
+```bash
+curl -u "opencode:change-me" http://127.0.0.1:4096/global/health
+```
+
+If you changed the username, password, or port, use those values instead.
+
+See [`docker/opencode/README.md`](docker/opencode/README.md) for service-specific verification steps and runtime behavior.
 
 #### Using Local Models with Ollama
 
@@ -181,6 +228,25 @@ cp packages/db/.env.example packages/db/.env
 # Edit both .env files to set DATABASE_URL="postgresql://postgres:your_password@localhost:5432/simstudio"
 ```
 
+If you want to use the OpenCode workflow block while running `next dev` on the host, also set these in `apps/sim/.env`:
+
+```env
+OPENCODE_BASE_URL=http://127.0.0.1:4096
+OPENCODE_SERVER_USERNAME=opencode
+OPENCODE_SERVER_PASSWORD=change-me
+OPENCODE_REPOS=https://github.com/octocat/Hello-World.git
+GEMINI_API_KEY=your-gemini-key
+```
+
+Then export the same environment before starting the OpenCode container so the app and Docker use identical credentials:
+
+```bash
+set -a
+source apps/sim/.env
+set +a
+docker compose -f docker-compose.local.yml up -d --build opencode
+```
+
 4. Run migrations:
 
 ```bash
@@ -191,9 +257,10 @@ cd packages/db && bunx drizzle-kit migrate --config=./drizzle.config.ts
 
 ```bash
 bun run dev:full  # Starts both Next.js app and realtime socket server
+bun run dev:full:webpack  # Same, but using Webpack instead of Turbopack
 ```
 
-Or run separately: `bun run dev` (Next.js) and `cd apps/sim && bun run dev:sockets` (realtime).
+Or run separately: `bun run dev` (Next.js/Turbopack), `cd apps/sim && bun run dev:webpack` (Next.js/Webpack), and `cd apps/sim && bun run dev:sockets` (realtime).
 
 ## Copilot API Keys
 

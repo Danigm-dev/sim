@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: docker/opencode.Dockerfile
     restart: unless-stopped
+    ports:
+      - '${OPENCODE_PORT:-4096}:${OPENCODE_PORT:-4096}'
     expose:
       - '4096'
     environment:
@@ -17,6 +19,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-${OPENAI_API_KEY_1:-}}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-${ANTHROPIC_API_KEY_1:-}}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-${GEMINI_API_KEY_1:-}}
+      - GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY:-${GEMINI_API_KEY:-${GEMINI_API_KEY_1:-}}}
     volumes:
       - opencode_repos:/app/repos
       - opencode_data:/home/opencode/.local/share/opencode

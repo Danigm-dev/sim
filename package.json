@@ -13,6 +13,7 @@
     "dev": "turbo run dev",
     "dev:sockets": "cd apps/sim && bun run dev:sockets",
     "dev:full": "cd apps/sim && bun run dev:full",
+    "dev:full:webpack": "cd apps/sim && bun run dev:full:webpack",
     "test": "turbo run test",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
