@@ -32,6 +32,7 @@ dump.rdb
 # misc
 .DS_Store
 *.pem
+docker/certs/*.crt
 
 # env files
 .env
