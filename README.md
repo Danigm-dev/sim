@@ -133,9 +133,19 @@ Local vs production behavior:
   - defaults `OPENCODE_SERVER_USERNAME=opencode`
   - defaults `OPENCODE_SERVER_PASSWORD=dev-opencode-password` if you do not set one explicitly
 - `docker-compose.prod.yml`
-  - expects `OPENCODE_SERVER_PASSWORD` to be set explicitly
+  - contains the upstream-style base deployment only
+- `docker-compose.opencode.yml`
+  - adds the `opencode` service as a production overlay
+  - injects the required `OPENCODE_*` variables into `simstudio`
   - keeps OpenCode internal to the Docker network with `expose`, not a published host port
+  - expects `OPENCODE_SERVER_PASSWORD` to be set explicitly
   - expects `OPENCODE_IMAGE` to exist in your registry if you override the default image
+
+Production deploy command:
+
+```bash
+docker compose -f docker-compose.prod.yml -f docker-compose.opencode.yml up -d
+```
 
 For local hot reload with `next dev` on the host, also set this in `apps/sim/.env`:
 
@@ -161,6 +171,7 @@ curl -u "opencode:change-me" http://127.0.0.1:4096/global/health
 If you changed the username, password, or port, use those values instead.
 
 See [`docker/opencode/README.md`](docker/opencode/README.md) for service-specific verification steps and runtime behavior.
+See [`docker/opencode/DEVOPS.md`](docker/opencode/DEVOPS.md) for the production deployment guide and CI/CD checklist.
 
 #### Using Local Models with Ollama
 

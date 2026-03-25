@@ -105,10 +105,18 @@ curl -u "$OPENCODE_SERVER_USERNAME:$OPENCODE_SERVER_PASSWORD" \
 
 ### Production-style compose
 
-`docker-compose.prod.yml` keeps OpenCode internal to the Docker network, so verify from another container:
+Production should use the base compose plus the OpenCode overlay:
 
 ```bash
-docker compose exec simstudio \
+docker compose -f docker-compose.prod.yml -f docker-compose.opencode.yml up -d
+```
+
+The overlay also injects `OPENCODE_BASE_URL`, `OPENCODE_PORT`, `OPENCODE_SERVER_USERNAME`, and `OPENCODE_SERVER_PASSWORD` into `simstudio`, so the app can authenticate against the internal OpenCode server.
+
+OpenCode stays internal to the Docker network, so verify from another container:
+
+```bash
+docker compose -f docker-compose.prod.yml -f docker-compose.opencode.yml exec simstudio \
   curl -u "$OPENCODE_SERVER_USERNAME:$OPENCODE_SERVER_PASSWORD" \
   http://opencode:${OPENCODE_PORT:-4096}/global/health
 ```
@@ -116,7 +124,7 @@ docker compose exec simstudio \
 Create a session:
 
 ```bash
-docker compose exec simstudio \
+docker compose -f docker-compose.prod.yml -f docker-compose.opencode.yml exec simstudio \
   curl -u "$OPENCODE_SERVER_USERNAME:$OPENCODE_SERVER_PASSWORD" \
   -H "Content-Type: application/json" \
   -d '{"title":"test"}' \
@@ -151,3 +159,4 @@ Use [`AGENTS.example.md`](./AGENTS.example.md) as a starting template for reposi
 
 - Session retention is not managed yet. OpenCode data persists until the `opencode_data` volume is pruned.
 - The SIMAI `OpenCode` block already uses this service in the current repository.
+- Production deployment details live in [`DEVOPS.md`](./DEVOPS.md).
